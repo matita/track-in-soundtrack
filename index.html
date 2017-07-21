@@ -9,6 +9,10 @@
                 padding-top: 2em;
                 padding-bottom: 2em;
             }
+
+            .track-title {
+                margin-top: 3em;
+            }
         </style>
     </head>
     <body>
@@ -27,7 +31,7 @@
 
             <div class="ui divider"></div>
 
-            <div class="result ui items"></div>
+            <div class="result"></div>
         </div>
 
 
@@ -44,13 +48,50 @@
                                 return {
                                     title: rec.title,
                                     artist: rec['artist-credit'][0].artist.name,
-                                    soundtrack: rec.releases.filter(filterSoundtracks)[0]
+                                    soundtracks: rec.releases.filter(filterSoundtracks)
                                 }
                             })  
                     })
                     .then(function (tracks) {
-                        return tracks.filter(function (track) { return !!track.soundtrack; })  
-                    });
+                        return tracks.filter(function (track) { return !!track.soundtracks.length; })  
+                    })
+                    .then(groupTracksByName);
+            }
+
+
+            function groupTracksByName(tracks) {
+                var dict = {};
+                tracks.forEach(function (track) {
+                    var trackHash = track.title + ' - ' + track.artist;
+                    var group = dict[trackHash];
+                    if (!group) {
+                        group = dict[trackHash] = {
+                            title: track.title,
+                            artist: track.artist,
+                            soundtracks: []
+                        };
+                    }
+
+                    group.soundtracks.push.apply(group.soundtracks, track.soundtracks);
+                });
+
+                return Object.keys(dict).map(function (hash) { 
+                    var track = dict[hash];
+                    track.soundtracks = removeDuplicateSoundtracks(track.soundtracks);
+                    return track; 
+                });
+            }
+
+            function removeDuplicateSoundtracks(soundtracks) {
+                var dict = {};
+                soundtracks.forEach(function (soundtrack) {
+                    var hash = soundtrack.title.toLowerCase().replace(/\W+/g, ' ');
+                    if (dict[hash])
+                        return;
+                    dict[hash] = soundtrack;
+                });
+
+                return Object.keys(dict).map(function (hash) { return dict[hash]; });
             }
 
 
@@ -76,27 +117,34 @@
 
             var Tmpl = {
                 recording: function (track) {
-                    return '<div class="track item">' +
-                        '<a class="ui small image">' +
-                            '<img class="cover" src="' + coverThumb(track.soundtrack.id) + '" onerror="this.src=placeholderImg(\'No image\')">' +
+                    return '<h2 class="track-title">' + track.title + ' - ' + track.artist + '</h2>' +
+                    '<p>' +
+                        '<a class="ui youtube button" href="' + ytSearchURI(track.title + ' ' + track.artist) + '" target="_blank">' +
+                            '<i class="youtube icon"></i>' +
+                            'Track' + 
                         '</a>' +
-                        '<div class="middle aligned content">' +
-                            '<div class="header">' + track.title + '</div>' +
-                            '<div class="meta">' + track.artist + '</div>' +
-                            '<div class="description">' + 
-                                '<p>' + track.soundtrack.title + '</p>' + 
-                                '<p>' +
-                                    '<a class="ui youtube button" href="' + ytSearchURI(track.title + ' ' + track.artist) + '" target="_blank">' +
-                                        '<i class="youtube icon"></i>' +
-                                        'Track' + 
-                                    '</a>' +
-                                    '<a class="ui youtube button" href="' + ytSearchURI(track.soundtrack.title + ' soundtrack') + '" target="_blank">' +
-                                        '<i class="youtube icon"></i>' +
-                                        'Soundtrack' + 
-                                    '</a>' +
-                                '</p>' +
+                    '</p>' +
+                    '<div class="ui items">' +
+                    track.soundtracks.map(function(soundtrack) {
+                        return '<div class="track item">' +
+                            '<a class="ui small image">' +
+                                '<img class="cover" src="' + coverThumb(soundtrack.id) + '" onerror="this.src=placeholderImg(\'No image\')">' +
+                            '</a>' +
+                            '<div class="middle aligned content">' +
+                                '<div class="header">' + soundtrack.title + '</div>' +
+                                //'<div class="meta">' + track.artist + '</div>' +
+                                '<div class="description">' + 
+                                    //'<p>' + track.soundtrack.title + '</p>' + 
+                                    '<p>' +
+                                        '<a class="ui youtube button" href="' + ytSearchURI(soundtrack.title + ' soundtrack') + '" target="_blank">' +
+                                            '<i class="youtube icon"></i>' +
+                                            'Soundtrack' + 
+                                        '</a>' +
+                                    '</p>' +
+                                '</div>' +
                             '</div>' +
-                        '</div>' +
+                        '</div>';
+                    }).join('') + 
                     '</div>';
                 }
             };
@@ -114,7 +162,8 @@
 
             document.getElementById('search').onchange = function (e) {
                 document.querySelector('.result').innerHTML = '<div class="ui active centered inline loader"></div>';
-                searchRecordings(e.target.value).then(receivedValues);
+                searchRecordings(e.target.value)
+                    .then(receivedValues);
             }
 
             document.onerror = function (e) {
