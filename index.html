@@ -16,7 +16,7 @@
         </style>
     </head>
     <body>
-        <div class="ui text container">
+        <div class="ui container">
 
             <div class="search-form">
 
@@ -28,8 +28,6 @@
                 </div>
 
             </div>
-
-            <div class="ui divider"></div>
 
             <div class="result"></div>
         </div>
@@ -117,34 +115,38 @@
 
             var Tmpl = {
                 recording: function (track) {
-                    return '<h2 class="track-title">' + track.title + ' - ' + track.artist + '</h2>' +
-                    '<p>' +
-                        '<a class="ui youtube button" href="' + ytSearchURI(track.title + ' ' + track.artist) + '" target="_blank">' +
-                            '<i class="youtube icon"></i>' +
-                            'Track' + 
-                        '</a>' +
-                    '</p>' +
-                    '<div class="ui items">' +
-                    track.soundtracks.map(function(soundtrack) {
-                        return '<div class="track item">' +
-                            '<a class="ui small image">' +
-                                '<img class="cover" src="' + coverThumb(soundtrack.id) + '" onerror="this.src=placeholderImg(\'No image\')">' +
-                            '</a>' +
-                            '<div class="middle aligned content">' +
-                                '<div class="header">' + soundtrack.title + '</div>' +
-                                //'<div class="meta">' + track.artist + '</div>' +
-                                '<div class="description">' + 
-                                    //'<p>' + track.soundtrack.title + '</p>' + 
-                                    '<p>' +
-                                        '<a class="ui youtube button" href="' + ytSearchURI(soundtrack.title + ' soundtrack') + '" target="_blank">' +
-                                            '<i class="youtube icon"></i>' +
-                                            'Soundtrack' + 
-                                        '</a>' +
-                                    '</p>' +
-                                '</div>' +
+                    return '<div class="track">' +
+                        '<h2 class="track-title ui header">' + 
+                            '<i class="music icon"></i>' +
+                            '<div class="content">' +
+                                track.title + ' - ' + track.artist + 
+                                '<div class="sub header">' + track.soundtracks.length + ' soundtracks</div>' +
                             '</div>' +
-                        '</div>';
-                    }).join('') + 
+                        '</h2>' +
+                        '<div>' + 
+                            '<p>' +
+                                '<a class="ui youtube button" href="' + ytSearchURI(track.title + ' ' + track.artist) + '" target="_blank">' +
+                                    '<i class="youtube icon"></i>' +
+                                    'Listen song' + 
+                                '</a>' +
+                            '</p>' +
+                            '<div class="ui cards">' +
+                                track.soundtracks.map(function(soundtrack) {
+                                    return '<div class="track card">' +
+                                        '<div class="image">' +
+                                            '<img class="cover" src="' + coverThumb(soundtrack.id) + '" onerror="this.src=placeholderImg(\'No image\')">' +
+                                        '</div>' +
+                                        '<div class="content">' +
+                                            '<div class="header">' + soundtrack.title + '</div>' +
+                                        '</div>' +
+                                        '<a class="ui bottom attached youtube button" href="' + ytSearchURI(soundtrack.title + ' soundtrack') + '" target="_blank">' +
+                                            '<i class="youtube icon"></i>' +
+                                            'Listen soundtrack' + 
+                                        '</a>' +
+                                    '</div>';
+                                }).join('') + 
+                            '</div>' +
+                        '</div>' +
                     '</div>';
                 }
             };
@@ -155,7 +157,7 @@
                 if (!tracks.length) {
                     result.innerHTML = 'No soundtrack found';
                 } else {
-                    result.innerHTML = tracks.map(Tmpl.recording).join('');
+                    result.innerHTML = /*'<div class="ui segments">' + */tracks.map(Tmpl.recording).join('<div class="ui divider" style="margin-top: 4em; margin-bottom: 4em"></div>')/* + '</div>'*/;
                 }
             }
 
